@@ -22,10 +22,10 @@ st.set_page_config(
 
 load_dotenv()
 
-# 로컬에서는 .env 우선 사용
+# 로컬에서는 .env 우선
 api_key = os.getenv("OPENAI_API_KEY")
 
-# 배포 환경에서는 Streamlit Secrets 사용
+# 배포 환경에서는 Streamlit Secrets
 if not api_key:
     try:
         api_key = st.secrets["OPENAI_API_KEY"]
@@ -244,7 +244,7 @@ type은 반드시 아래 중 하나만 사용하세요.
 5. 경제적 인과관계를 지나치게 단순화하지 마세요.
 6. JSON 이외의 텍스트는 출력하지 마세요.
 7. trailing comma를 사용하지 마세요.
-8. 반드시 파싱 가능한 JSON만 출력하세요.
+8. 반드시 파싱 가능한 올바른 JSON만 출력하세요.
 
 ### 입력 기사 또는 이슈
 
@@ -307,10 +307,7 @@ def show_analysis(data):
         for item in data["background"]:
 
             with st.expander(item["term"]):
-
-                st.write(
-                    item["explanation"]
-                )
+                st.write(item["explanation"])
 
         st.divider()
 
@@ -318,19 +315,19 @@ def show_analysis(data):
 
         for impact in data["market_impacts"]:
 
-            st.markdown(
-                f"**{impact['market']}**"
-            )
+            with st.container(border=True):
 
-            st.write(
-                f"방향: {impact['direction']}"
-            )
+                st.markdown(
+                    f"**{impact['market']}**"
+                )
 
-            st.write(
-                impact["reason"]
-            )
+                st.write(
+                    f"방향: {impact['direction']}"
+                )
 
-            st.write("")
+                st.write(
+                    impact["reason"]
+                )
 
 
     # -------------------------
@@ -372,36 +369,31 @@ def show_analysis(data):
     # TAB 3 : 인과관계
     # -------------------------
 
-  with tab3:
+    with tab3:
 
-    st.subheader("경제적 흐름")
+        st.subheader("경제적 흐름")
 
-    causal_chain = data["causal_chain"]
+        causal_chain = data["causal_chain"]
 
-    for i, step in enumerate(causal_chain):
+        for i, step in enumerate(causal_chain):
 
-        box_html = f"""
-<div style="border:1px solid rgba(128,128,128,0.35); border-radius:14px; padding:16px 18px; margin-bottom:7px;">
-    <div style="font-size:12px; opacity:0.6; margin-bottom:6px; font-weight:600; letter-spacing:0.5px;">
-        STEP {i + 1}
-    </div>
-    <div style="font-size:16px; font-weight:600; line-height:1.6;">
-        {step}
-    </div>
-</div>
-"""
+            with st.container(border=True):
 
-        st.markdown(
-            box_html,
-            unsafe_allow_html=True
-        )
+                st.caption(
+                    f"STEP {i + 1}"
+                )
 
-        if i < len(causal_chain) - 1:
+                st.markdown(
+                    f"**{step}**"
+                )
 
-            st.markdown(
-                '<div style="text-align:center; font-size:22px; opacity:0.45; margin:4px 0 8px 0;">↓</div>',
-                unsafe_allow_html=True
-            )
+            if i < len(causal_chain) - 1:
+
+                st.markdown(
+                    "<div style='text-align:center; font-size:24px;'>↓</div>",
+                    unsafe_allow_html=True
+                )
+
 
     # -------------------------
     # TAB 4 : 궁금한 질문
@@ -471,9 +463,11 @@ def show_analysis(data):
             "further_thinking"
         ]:
 
-            st.write(
-                f"💡 {item}"
-            )
+            with st.container(border=True):
+
+                st.write(
+                    f"💡 {item}"
+                )
 
 
 # -----------------------------
