@@ -4,18 +4,15 @@ from dotenv import load_dotenv
 import os
 import json
 
+from hankyung_news import (
+    get_hankyung_today_articles,
+    filter_economic_articles,
+    select_top_economic_issues
+)
+
 # -----------------------------
 # 기본 설정
 # -----------------------------
-
-load_dotenv()
-
-api_key = st.secrets.get(
-    "OPENAI_API_KEY",
-    os.getenv("OPENAI_API_KEY")
-)
-
-client = OpenAI(api_key=api_key)
 
 st.set_page_config(
     page_title="EconQ",
@@ -23,43 +20,51 @@ st.set_page_config(
     layout="wide"
 )
 
-# -----------------------------
-# 오늘의 이슈 데이터
-# 텔레그램 자동연결 전 임시 수동 입력
-# -----------------------------
+load_dotenv()
 
-today_issues = [
-    {
-        "title": "한국은행 기준금리 인상",
-        "category": "금리",
-        "content": """
-한국은행이 기준금리를 인상했다.
-강한 성장세와 물가 압력을 고려해 선제적 인상이 필요하다는 입장을 밝혔다.
-향후 추가 금리 인상 가능성에도 시장의 관심이 집중되고 있다.
-"""
-    },
-    {
-        "title": "미국 물가 둔화와 연준 금리 전망",
-        "category": "물가",
-        "content": """
-미국 물가 지표가 시장 예상보다 낮게 발표되면서
-연방준비제도의 금리 인하 가능성에 대한 기대가 확대됐다.
-이에 미국 국채금리와 달러화가 하락 압력을 받았다.
-"""
-    },
-    {
-        "title": "국제유가 상승과 물가 부담",
-        "category": "원자재",
-        "content": """
-국제유가가 상승하면서 글로벌 물가 압력이 다시 높아질 수 있다는 우려가 제기됐다.
-유가 상승은 기업의 비용과 소비자물가에 영향을 줄 수 있어
-주요국 통화정책에도 변수로 작용할 가능성이 있다.
-"""
-    }
-]
+# 로컬에서는 .env 우선 사용
+api_key = os.getenv("OPENAI_API_KEY")
+
+# 배포 환경에서는 Streamlit Secrets 사용
+if not api_key:
+    try:
+        api_key = st.secrets["OPENAI_API_KEY"]
+    except Exception:
+        api_key = None
+
+if not api_key:
+    st.error("OpenAI API 키를 찾을 수 없습니다.")
+    st.stop()
+
+client = OpenAI(api_key=api_key)
+
 
 # -----------------------------
-# EconQ 분석 함수
+# 오늘의 주요 이슈 불러오기
+# 30분 동안 캐시
+# -----------------------------
+
+@st.cache_data(ttl=1800)
+def get_today_issues():
+
+    articles = get_hankyung_today_articles()
+
+    filtered_articles = filter_economic_articles(
+        articles
+    )
+
+    if not filtered_articles:
+        return []
+
+    issues = select_top_economic_issues(
+        filtered_articles
+    )
+
+    return issues
+
+
+# -----------------------------
+# EconQ 기사/이슈 분석 함수
 # -----------------------------
 
 def analyze_news(news_text):
@@ -107,7 +112,9 @@ def analyze_news(news_text):
   "further_thinking": []
 }}
 
-category는 반드시 다음 중 하나만 사용하세요.
+## category 규칙
+
+category는 반드시 아래 값 중 하나만 사용하세요.
 
 - 금리
 - 환율
@@ -125,15 +132,32 @@ category는 반드시 다음 중 하나만 사용하세요.
 
 여러 카테고리를 결합하지 마세요.
 
-summary는 기사 핵심 내용을 3~5개의 짧은 문장으로 정리하세요.
 
-importance는 이 이슈가 경제·금융 측면에서 왜 중요한지
+## summary
+
+기사 또는 이슈의 핵심 내용을
+3~5개의 짧은 문장으로 정리하세요.
+
+
+## importance
+
+이 이슈가 경제·금융 측면에서 왜 중요한지
 2~4문장으로 설명하세요.
 
-facts는 기사에서 직접 확인되는 핵심 사실 5~7개만 작성하세요.
-기사에 없는 해석이나 전망은 넣지 마세요.
 
-ai_interpretations는 기사 내용을 바탕으로 한 핵심 해석 3~5개만 작성하세요.
+## facts
+
+입력된 기사 또는 자료에서 직접 확인할 수 있는 핵심 사실만 작성하세요.
+
+가장 중요한 사실 5~7개만 선택하세요.
+
+입력 자료에 없는 내용은 사실처럼 작성하지 마세요.
+
+
+## ai_interpretations
+
+입력된 사실을 바탕으로 경제적으로 추가 해석할 수 있는 내용을
+3~5개 작성하세요.
 
 반드시 다음과 같은 불확실성 표현을 사용하세요.
 
@@ -141,16 +165,42 @@ ai_interpretations는 기사 내용을 바탕으로 한 핵심 해석 3~5개만 
 - "~가능성이 있다"
 - "~압력이 생길 수 있다"
 
-기사에서 확인된 사실처럼 단정하지 마세요.
+기사에서 직접 확인된 사실처럼 단정하지 마세요.
 
-background는 기사 이해에 필요한 경제 개념 1~4개만 작성하세요.
 
-causal_chain은 경제적 인과관계를 단계별로 나누세요.
+## background
+
+이 내용을 이해하는 데 필요한 핵심 경제 개념을
+1~4개 선택하세요.
+
+각 항목에는 다음을 작성하세요.
+
+- term
+- explanation
+
+경제 초중급자가 이해할 수 있도록 쉽게 설명하세요.
+
+
+## causal_chain
+
+경제적 인과관계를 단계별로 작성하세요.
+
+각 배열 항목에는 하나의 단계만 작성하세요.
+
 각 문자열 안에 "→" 기호를 넣지 마세요.
 
-market_impacts는 실제 관련성이 높은 시장이나 경제주체만 분석하세요.
 
-direction은 가급적 아래 중 하나를 사용하세요.
+## market_impacts
+
+관련성이 높은 시장이나 경제주체만 분석하세요.
+
+각 항목에는 다음을 작성하세요.
+
+- market
+- direction
+- reason
+
+direction은 가급적 아래 표현 중 하나를 사용하세요.
 
 - 긍정적 영향 가능
 - 부정적 영향 가능
@@ -159,9 +209,13 @@ direction은 가급적 아래 중 하나를 사용하세요.
 - 변동성 확대 가능
 - 영향 불확실
 
-questions는 정확히 7개 생성하세요.
 
-question의 type은 반드시 다음 중 하나만 사용하세요.
+## questions
+
+독자가 해당 내용을 읽은 뒤
+자연스럽게 떠올릴 가능성이 높은 질문을 정확히 7개 생성하세요.
+
+type은 반드시 다음 중 하나만 사용하세요.
 
 - 개념
 - 인과관계
@@ -170,7 +224,18 @@ question의 type은 반드시 다음 중 하나만 사용하세요.
 - 한국경제
 - 투자시장
 
+가능하면 여러 유형이 골고루 섞이도록 구성하세요.
+
 질문은 서로 최대한 중복되지 않게 작성하세요.
+
+단순 사실 확인 질문보다 아래 형태를 우선하세요.
+
+- 왜?
+- 어떻게?
+- 그렇다면?
+- 반대로?
+- 한국에는 어떤 영향이 있을까?
+- 어떤 조건에서는 결과가 달라질까?
 
 각 질문에는 다음을 모두 작성하세요.
 
@@ -179,15 +244,26 @@ question의 type은 반드시 다음 중 하나만 사용하세요.
 - why_important
 - answer
 
-further_thinking은 정확히 2개만 작성하세요.
 
-기사에 없는 사실을 임의로 만들지 마세요.
-기사에서 확인된 사실과 AI의 추가 해석을 반드시 구분하세요.
-숫자는 임의로 변경하지 마세요.
-전망은 단정하지 마세요.
-JSON 이외의 텍스트는 출력하지 마세요.
-trailing comma를 사용하지 마세요.
-반드시 파싱 가능한 올바른 JSON만 출력하세요.
+## further_thinking
+
+정확히 2개만 작성하세요.
+
+단순 내용 반복이 아니라
+한 단계 더 생각해볼 수 있는 포인트를 작성하세요.
+
+
+## 전체 원칙
+
+1. 입력된 자료에 없는 사실을 임의로 만들지 마세요.
+2. 확인된 사실과 AI의 추가 해석을 반드시 구분하세요.
+3. 숫자는 임의로 변경하지 마세요.
+4. 전망은 단정하지 마세요.
+5. 경제적 인과관계를 지나치게 단순화하지 마세요.
+6. JSON 이외의 텍스트는 출력하지 마세요.
+7. trailing comma를 사용하지 마세요.
+8. 반드시 파싱 가능한 올바른 JSON만 출력하세요.
+
 
 ### 입력 기사 또는 이슈
 
@@ -205,7 +281,7 @@ trailing comma를 사용하지 마세요.
 
 
 # -----------------------------
-# 분석 결과 출력 함수
+# 분석 결과 표시 함수
 # -----------------------------
 
 def show_analysis(data):
@@ -213,9 +289,14 @@ def show_analysis(data):
     st.divider()
 
     st.header(data["title"])
-    st.caption(f"카테고리: {data['category']}")
 
-    st.info(data["importance"])
+    st.caption(
+        f"카테고리: {data['category']}"
+    )
+
+    st.info(
+        data["importance"]
+    )
 
     tab1, tab2, tab3, tab4, tab5 = st.tabs(
         [
@@ -228,7 +309,7 @@ def show_analysis(data):
     )
 
     # -------------------------
-    # TAB 1 : 핵심 정리
+    # TAB 1
     # -------------------------
 
     with tab1:
@@ -240,25 +321,45 @@ def show_analysis(data):
 
         st.divider()
 
-        st.subheader("알아두면 좋은 경제 개념")
+        st.subheader(
+            "알아두면 좋은 경제 개념"
+        )
 
         for item in data["background"]:
-            with st.expander(item["term"]):
-                st.write(item["explanation"])
+
+            with st.expander(
+                item["term"]
+            ):
+
+                st.write(
+                    item["explanation"]
+                )
 
         st.divider()
 
-        st.subheader("시장 영향")
+        st.subheader(
+            "시장 영향"
+        )
 
         for impact in data["market_impacts"]:
 
-            st.markdown(f"**{impact['market']}**")
-            st.write(f"방향: {impact['direction']}")
-            st.write(impact["reason"])
+            st.markdown(
+                f"**{impact['market']}**"
+            )
+
+            st.write(
+                f"방향: {impact['direction']}"
+            )
+
+            st.write(
+                impact["reason"]
+            )
+
             st.write("")
 
+
     # -------------------------
-    # TAB 2 : 사실 vs AI 해석
+    # TAB 2
     # -------------------------
 
     with tab2:
@@ -267,69 +368,157 @@ def show_analysis(data):
 
         with col1:
 
-            st.subheader("📰 기사에서 확인된 사실")
+            st.subheader(
+                "📰 확인된 사실"
+            )
 
             for fact in data["facts"]:
-                st.write(f"• {fact}")
+
+                st.write(
+                    f"• {fact}"
+                )
 
         with col2:
 
-            st.subheader("🤖 AI의 추가 해석")
+            st.subheader(
+                "🤖 AI의 추가 해석"
+            )
 
-            for item in data["ai_interpretations"]:
-                st.write(f"• {item}")
+            for item in data[
+                "ai_interpretations"
+            ]:
 
-    # -------------------------
-    # TAB 3 : 인과관계
-    # -------------------------
+                st.write(
+                    f"• {item}"
+                )
 
-    with tab3:
-
-        st.subheader("경제적 흐름")
-
-        causal_chain = data["causal_chain"]
-
-        for i, step in enumerate(causal_chain):
-
-            st.markdown(f"### {i + 1}. {step}")
-
-            if i < len(causal_chain) - 1:
-                st.markdown("↓")
 
     # -------------------------
-    # TAB 4 : 궁금한 질문
+    # TAB 3
+    # -------------------------
+
+   with tab3:
+
+    st.subheader("경제적 흐름")
+
+    causal_chain = data["causal_chain"]
+
+    for i, step in enumerate(causal_chain):
+
+        st.markdown(
+            f"""
+            <div style="
+                border: 1px solid rgba(128,128,128,0.35);
+                border-radius: 12px;
+                padding: 16px 18px;
+                margin-bottom: 8px;
+            ">
+                <div style="
+                    font-size: 13px;
+                    opacity: 0.65;
+                    margin-bottom: 6px;
+                ">
+                    STEP {i + 1}
+                </div>
+
+                <div style="
+                    font-size: 16px;
+                    font-weight: 600;
+                    line-height: 1.6;
+                ">
+                    {step}
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        if i < len(causal_chain) - 1:
+            st.markdown(
+                """
+                <div style="
+                    text-align:center;
+                    font-size:22px;
+                    opacity:0.5;
+                    margin:2px 0 8px 0;
+                ">
+                    ↓
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+    # -------------------------
+    # TAB 4
     # -------------------------
 
     with tab4:
 
-        st.subheader("이 이슈를 이해하면 이런 점이 궁금할 수 있어요.")
+    st.subheader(
+        "이 내용을 읽으면 이런 점이 궁금할 수 있어요."
+    )
 
-        st.caption(
-            "질문을 클릭하면 EconQ가 왜 중요한 질문인지와 답변을 설명합니다."
+    st.caption(
+        "질문을 클릭하면 EconQ가 왜 중요한 질문인지와 답변을 설명합니다."
+    )
+
+    question_icons = {
+        "개념": "💡",
+        "인과관계": "🔗",
+        "확장": "🔭",
+        "반대상황": "🔄",
+        "한국경제": "🇰🇷",
+        "투자시장": "📈"
+    }
+
+    for q in data["questions"]:
+
+        icon = question_icons.get(
+            q["type"],
+            "❓"
         )
 
-        for q in data["questions"]:
+        title = (
+            f"{icon} [{q['type']}] "
+            f"{q['question']}"
+        )
 
-            title = f"[{q['type']}] {q['question']}"
+        with st.expander(title):
 
-            with st.expander(title):
+            st.markdown(
+                "🎯 **왜 이 질문이 중요할까요?**"
+            )
 
-                st.markdown("**왜 이 질문이 중요할까요?**")
-                st.write(q["why_important"])
+            st.write(
+                q["why_important"]
+            )
 
-                st.markdown("**답변**")
-                st.write(q["answer"])
+            st.markdown(
+                "💬 **EconQ의 답변**"
+            )
+
+            st.write(
+                q["answer"]
+            )
+
 
     # -------------------------
-    # TAB 5 : 한 단계 더
+    # TAB 5
     # -------------------------
 
     with tab5:
 
-        st.subheader("한 단계 더 생각해보기")
+        st.subheader(
+            "한 단계 더 생각해보기"
+        )
 
-        for item in data["further_thinking"]:
-            st.write(f"💡 {item}")
+        for item in data[
+            "further_thinking"
+        ]:
+
+            st.write(
+                f"💡 {item}"
+            )
 
 
 # -----------------------------
@@ -344,16 +533,16 @@ st.subheader(
 
 st.write(
     """
-    오늘의 주요 경제 이슈를 선택하거나,
-    직접 읽고 싶은 경제 기사를 입력해보세요.
-    """
+오늘의 주요 경제 이슈를 선택하거나,
+직접 읽고 싶은 경제 기사를 입력해보세요.
+"""
 )
 
 st.divider()
 
 
 # -----------------------------
-# 메인 진입 탭
+# 메인 탭
 # -----------------------------
 
 main_tab1, main_tab2 = st.tabs(
@@ -370,63 +559,113 @@ main_tab1, main_tab2 = st.tabs(
 
 with main_tab1:
 
-    st.subheader("오늘 꼭 알아둘 경제 이슈")
+    st.subheader(
+        "오늘 꼭 알아둘 경제 이슈"
+    )
 
     st.caption(
-        "주요 경제 이슈 중 하나를 선택하면 EconQ가 자동으로 분석합니다."
+        "한국경제의 오늘 기사 중 EconQ가 중요한 경제·금융 이슈를 선정합니다."
     )
 
-    issue_titles = [
-        issue["title"]
-        for issue in today_issues
-    ]
-
-    selected_title = st.selectbox(
-        "분석할 이슈를 선택하세요.",
-        issue_titles
-    )
-
-    selected_issue = next(
-        issue
-        for issue in today_issues
-        if issue["title"] == selected_title
-    )
-
-    st.markdown(
-        f"""
-**카테고리:** {selected_issue['category']}
-"""
-    )
-
-    if st.button(
-        "🔥 이 이슈 분석하기",
-        type="primary"
-    ):
+    try:
 
         with st.spinner(
-            "EconQ가 오늘의 이슈를 분석하고 있습니다..."
+            "오늘의 주요 이슈를 불러오는 중..."
         ):
 
-            try:
+            today_issues = get_today_issues()
 
-                data = analyze_news(
-                    selected_issue["content"]
-                )
+        if not today_issues:
 
-                st.session_state["analysis"] = data
+            st.warning(
+                "오늘의 주요 이슈를 찾지 못했습니다."
+            )
 
-            except json.JSONDecodeError:
+        else:
 
-                st.error(
-                    "AI 응답을 JSON으로 변환하지 못했습니다. "
-                    "다시 한 번 분석해주세요."
-                )
+            issue_titles = [
+                issue["title"]
+                for issue in today_issues
+            ]
 
-            except Exception as e:
+            selected_title = st.selectbox(
+                "분석할 이슈를 선택하세요.",
+                issue_titles
+            )
 
-                st.error(
-                    f"오류가 발생했습니다: {e}"
-                )
+            selected_issue = next(
+                issue
+                for issue in today_issues
+                if issue["title"]
+                == selected_title
+            )
+
+            st.markdown(
+                f"""
+**카테고리:** {selected_issue['category']}
+
+**왜 중요한가?**  
+{selected_issue['why_important']}
+
+**대표 기사:**  
+{selected_issue['article_title']}
+"""
+            )
+
+            st.link_button(
+                "📰 원문 기사 보기",
+                selected_issue["url"]
+            )
+
+            if st.button(
+                "🔥 이 이슈 분석하기",
+                type="primary"
+            ):
+
+                issue_text = f"""
+오늘의 주요 경제 이슈를 분석하세요.
+
+이슈 제목:
+{selected_issue['title']}
+
+대표 기사 제목:
+{selected_issue['article_title']}
+
+이 이슈가 중요한 이유:
+{selected_issue['why_important']}
+"""
+
+                with st.spinner(
+                    "EconQ가 이 이슈를 분석하고 있습니다..."
+                ):
+
+                    try:
+
+                        data = analyze_news(
+                            issue_text
+                        )
+
+                        st.session_state[
+                            "analysis"
+                        ] = data
+
+                    except json.JSONDecodeError:
+
+                        st.error(
+                            "AI 응답을 JSON으로 변환하지 못했습니다. 다시 시도해주세요."
+                        )
+
+                    except Exception as e:
+
+                        st.error(
+                            f"오류가 발생했습니다: {e}"
+                        )
+
+    except Exception as e:
+
+        st.error(
+            f"오늘의 주요 이슈를 불러오지 못했습니다: {e}"
+        )
 
 
 # -----------------------------
@@ -435,7 +674,9 @@ with main_tab1:
 
 with main_tab2:
 
-    st.subheader("직접 기사 입력")
+    st.subheader(
+        "직접 기사 입력"
+    )
 
     news_text = st.text_area(
         "분석할 경제 기사 또는 시사 이슈를 입력하세요.",
@@ -461,15 +702,18 @@ with main_tab2:
 
                 try:
 
-                    data = analyze_news(news_text)
+                    data = analyze_news(
+                        news_text
+                    )
 
-                    st.session_state["analysis"] = data
+                    st.session_state[
+                        "analysis"
+                    ] = data
 
                 except json.JSONDecodeError:
 
                     st.error(
-                        "AI 응답을 JSON으로 변환하지 못했습니다. "
-                        "다시 한 번 분석해주세요."
+                        "AI 응답을 JSON으로 변환하지 못했습니다. 다시 시도해주세요."
                     )
 
                 except Exception as e:
@@ -480,7 +724,7 @@ with main_tab2:
 
 
 # -----------------------------
-# 분석 결과
+# 분석 결과 출력
 # -----------------------------
 
 if "analysis" in st.session_state:
