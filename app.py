@@ -628,7 +628,7 @@ with main_tab2:
 
     news_text = st.text_area(
         "분석할 경제 기사 또는 시사 이슈를 입력하세요.",
-        height=300,
+        height=200,
         placeholder="여기에 기사 본문을 붙여넣으세요."
     )
 
