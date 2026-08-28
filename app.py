@@ -372,60 +372,36 @@ def show_analysis(data):
     # TAB 3 : 인과관계
     # -------------------------
 
-    with tab3:
+  with tab3:
 
-        st.subheader("경제적 흐름")
+    st.subheader("경제적 흐름")
 
-        causal_chain = data["causal_chain"]
+    causal_chain = data["causal_chain"]
 
-        for i, step in enumerate(causal_chain):
+    for i, step in enumerate(causal_chain):
+
+        box_html = f"""
+<div style="border:1px solid rgba(128,128,128,0.35); border-radius:14px; padding:16px 18px; margin-bottom:7px;">
+    <div style="font-size:12px; opacity:0.6; margin-bottom:6px; font-weight:600; letter-spacing:0.5px;">
+        STEP {i + 1}
+    </div>
+    <div style="font-size:16px; font-weight:600; line-height:1.6;">
+        {step}
+    </div>
+</div>
+"""
+
+        st.markdown(
+            box_html,
+            unsafe_allow_html=True
+        )
+
+        if i < len(causal_chain) - 1:
 
             st.markdown(
-                f"""
-                <div style="
-                    border: 1px solid rgba(128,128,128,0.35);
-                    border-radius: 14px;
-                    padding: 16px 18px;
-                    margin-bottom: 7px;
-                ">
-                    <div style="
-                        font-size: 12px;
-                        opacity: 0.6;
-                        margin-bottom: 6px;
-                        font-weight: 600;
-                        letter-spacing: 0.5px;
-                    ">
-                        STEP {i + 1}
-                    </div>
-
-                    <div style="
-                        font-size: 16px;
-                        font-weight: 600;
-                        line-height: 1.6;
-                    ">
-                        {step}
-                    </div>
-                </div>
-                """,
+                '<div style="text-align:center; font-size:22px; opacity:0.45; margin:4px 0 8px 0;">↓</div>',
                 unsafe_allow_html=True
             )
-
-            if i < len(causal_chain) - 1:
-
-                st.markdown(
-                    """
-                    <div style="
-                        text-align: center;
-                        font-size: 22px;
-                        opacity: 0.45;
-                        margin: 1px 0 7px 0;
-                    ">
-                        ↓
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-
 
     # -------------------------
     # TAB 4 : 궁금한 질문
