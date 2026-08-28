@@ -32,7 +32,6 @@ today_issues = [
     {
         "title": "한국은행 기준금리 인상",
         "category": "금리",
-        "source": "텔레그램에서 발견한 이슈",
         "content": """
 한국은행이 기준금리를 인상했다.
 강한 성장세와 물가 압력을 고려해 선제적 인상이 필요하다는 입장을 밝혔다.
@@ -331,8 +330,6 @@ with main_tab1:
         f"""
 **카테고리:** {selected_issue['category']}
 
-**출처:** {selected_issue['source']}
-"""
     )
 
     if st.button(
