@@ -41,7 +41,6 @@ client = OpenAI(api_key=api_key)
 
 # -----------------------------
 # 오늘의 주요 이슈 불러오기
-# 30분 동안 캐시
 # -----------------------------
 
 @st.cache_data(ttl=1800)
@@ -64,7 +63,7 @@ def get_today_issues():
 
 
 # -----------------------------
-# EconQ 기사/이슈 분석 함수
+# EconQ 분석 함수
 # -----------------------------
 
 def analyze_news(news_text):
@@ -112,7 +111,7 @@ def analyze_news(news_text):
   "further_thinking": []
 }}
 
-## category 규칙
+## category
 
 category는 반드시 아래 값 중 하나만 사용하세요.
 
@@ -132,34 +131,25 @@ category는 반드시 아래 값 중 하나만 사용하세요.
 
 여러 카테고리를 결합하지 마세요.
 
-
 ## summary
 
-기사 또는 이슈의 핵심 내용을
-3~5개의 짧은 문장으로 정리하세요.
-
+기사 또는 이슈의 핵심 내용을 3~5개의 짧은 문장으로 정리하세요.
 
 ## importance
 
-이 이슈가 경제·금융 측면에서 왜 중요한지
-2~4문장으로 설명하세요.
-
+이 이슈가 경제·금융 측면에서 왜 중요한지 2~4문장으로 설명하세요.
 
 ## facts
 
-입력된 기사 또는 자료에서 직접 확인할 수 있는 핵심 사실만 작성하세요.
+입력 자료에서 직접 확인할 수 있는 핵심 사실 5~7개만 작성하세요.
 
-가장 중요한 사실 5~7개만 선택하세요.
-
-입력 자료에 없는 내용은 사실처럼 작성하지 마세요.
-
+기사에 없는 내용은 사실처럼 작성하지 마세요.
 
 ## ai_interpretations
 
-입력된 사실을 바탕으로 경제적으로 추가 해석할 수 있는 내용을
-3~5개 작성하세요.
+입력된 사실을 바탕으로 한 핵심 경제적 해석을 3~5개 작성하세요.
 
-반드시 다음과 같은 불확실성 표현을 사용하세요.
+반드시 아래와 같은 불확실성 표현을 사용하세요.
 
 - "~할 수 있다"
 - "~가능성이 있다"
@@ -167,11 +157,9 @@ category는 반드시 아래 값 중 하나만 사용하세요.
 
 기사에서 직접 확인된 사실처럼 단정하지 마세요.
 
-
 ## background
 
-이 내용을 이해하는 데 필요한 핵심 경제 개념을
-1~4개 선택하세요.
+내용을 이해하는 데 필요한 핵심 경제 개념을 1~4개 선택하세요.
 
 각 항목에는 다음을 작성하세요.
 
@@ -180,7 +168,6 @@ category는 반드시 아래 값 중 하나만 사용하세요.
 
 경제 초중급자가 이해할 수 있도록 쉽게 설명하세요.
 
-
 ## causal_chain
 
 경제적 인과관계를 단계별로 작성하세요.
@@ -188,7 +175,6 @@ category는 반드시 아래 값 중 하나만 사용하세요.
 각 배열 항목에는 하나의 단계만 작성하세요.
 
 각 문자열 안에 "→" 기호를 넣지 마세요.
-
 
 ## market_impacts
 
@@ -200,7 +186,7 @@ category는 반드시 아래 값 중 하나만 사용하세요.
 - direction
 - reason
 
-direction은 가급적 아래 표현 중 하나를 사용하세요.
+direction은 가급적 아래 중 하나를 사용하세요.
 
 - 긍정적 영향 가능
 - 부정적 영향 가능
@@ -209,13 +195,12 @@ direction은 가급적 아래 표현 중 하나를 사용하세요.
 - 변동성 확대 가능
 - 영향 불확실
 
-
 ## questions
 
-독자가 해당 내용을 읽은 뒤
-자연스럽게 떠올릴 가능성이 높은 질문을 정확히 7개 생성하세요.
+독자가 해당 내용을 읽은 뒤 자연스럽게 떠올릴 가능성이 높은 질문을
+정확히 7개 생성하세요.
 
-type은 반드시 다음 중 하나만 사용하세요.
+type은 반드시 아래 중 하나만 사용하세요.
 
 - 개념
 - 인과관계
@@ -224,9 +209,9 @@ type은 반드시 다음 중 하나만 사용하세요.
 - 한국경제
 - 투자시장
 
-가능하면 여러 유형이 골고루 섞이도록 구성하세요.
+여러 유형이 골고루 섞이도록 구성하세요.
 
-질문은 서로 최대한 중복되지 않게 작성하세요.
+질문은 최대한 중복되지 않게 작성하세요.
 
 단순 사실 확인 질문보다 아래 형태를 우선하세요.
 
@@ -244,14 +229,11 @@ type은 반드시 다음 중 하나만 사용하세요.
 - why_important
 - answer
 
-
 ## further_thinking
 
 정확히 2개만 작성하세요.
 
-단순 내용 반복이 아니라
-한 단계 더 생각해볼 수 있는 포인트를 작성하세요.
-
+단순 내용 반복이 아니라 한 단계 더 생각해볼 수 있는 포인트를 작성하세요.
 
 ## 전체 원칙
 
@@ -262,8 +244,7 @@ type은 반드시 다음 중 하나만 사용하세요.
 5. 경제적 인과관계를 지나치게 단순화하지 마세요.
 6. JSON 이외의 텍스트는 출력하지 마세요.
 7. trailing comma를 사용하지 마세요.
-8. 반드시 파싱 가능한 올바른 JSON만 출력하세요.
-
+8. 반드시 파싱 가능한 JSON만 출력하세요.
 
 ### 입력 기사 또는 이슈
 
@@ -309,7 +290,7 @@ def show_analysis(data):
     )
 
     # -------------------------
-    # TAB 1
+    # TAB 1 : 핵심 정리
     # -------------------------
 
     with tab1:
@@ -321,15 +302,11 @@ def show_analysis(data):
 
         st.divider()
 
-        st.subheader(
-            "알아두면 좋은 경제 개념"
-        )
+        st.subheader("알아두면 좋은 경제 개념")
 
         for item in data["background"]:
 
-            with st.expander(
-                item["term"]
-            ):
+            with st.expander(item["term"]):
 
                 st.write(
                     item["explanation"]
@@ -337,9 +314,7 @@ def show_analysis(data):
 
         st.divider()
 
-        st.subheader(
-            "시장 영향"
-        )
+        st.subheader("시장 영향")
 
         for impact in data["market_impacts"]:
 
@@ -359,7 +334,7 @@ def show_analysis(data):
 
 
     # -------------------------
-    # TAB 2
+    # TAB 2 : 사실 vs AI 해석
     # -------------------------
 
     with tab2:
@@ -394,116 +369,120 @@ def show_analysis(data):
 
 
     # -------------------------
-    # TAB 3
+    # TAB 3 : 인과관계
     # -------------------------
 
-   with tab3:
+    with tab3:
 
-    st.subheader("경제적 흐름")
+        st.subheader("경제적 흐름")
 
-    causal_chain = data["causal_chain"]
+        causal_chain = data["causal_chain"]
 
-    for i, step in enumerate(causal_chain):
+        for i, step in enumerate(causal_chain):
 
-        st.markdown(
-            f"""
-            <div style="
-                border: 1px solid rgba(128,128,128,0.35);
-                border-radius: 12px;
-                padding: 16px 18px;
-                margin-bottom: 8px;
-            ">
-                <div style="
-                    font-size: 13px;
-                    opacity: 0.65;
-                    margin-bottom: 6px;
-                ">
-                    STEP {i + 1}
-                </div>
-
-                <div style="
-                    font-size: 16px;
-                    font-weight: 600;
-                    line-height: 1.6;
-                ">
-                    {step}
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-        if i < len(causal_chain) - 1:
             st.markdown(
-                """
+                f"""
                 <div style="
-                    text-align:center;
-                    font-size:22px;
-                    opacity:0.5;
-                    margin:2px 0 8px 0;
+                    border: 1px solid rgba(128,128,128,0.35);
+                    border-radius: 14px;
+                    padding: 16px 18px;
+                    margin-bottom: 7px;
                 ">
-                    ↓
+                    <div style="
+                        font-size: 12px;
+                        opacity: 0.6;
+                        margin-bottom: 6px;
+                        font-weight: 600;
+                        letter-spacing: 0.5px;
+                    ">
+                        STEP {i + 1}
+                    </div>
+
+                    <div style="
+                        font-size: 16px;
+                        font-weight: 600;
+                        line-height: 1.6;
+                    ">
+                        {step}
+                    </div>
                 </div>
                 """,
                 unsafe_allow_html=True
             )
 
+            if i < len(causal_chain) - 1:
+
+                st.markdown(
+                    """
+                    <div style="
+                        text-align: center;
+                        font-size: 22px;
+                        opacity: 0.45;
+                        margin: 1px 0 7px 0;
+                    ">
+                        ↓
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
+
     # -------------------------
-    # TAB 4
+    # TAB 4 : 궁금한 질문
     # -------------------------
 
     with tab4:
 
-    st.subheader(
-        "이 내용을 읽으면 이런 점이 궁금할 수 있어요."
-    )
-
-    st.caption(
-        "질문을 클릭하면 EconQ가 왜 중요한 질문인지와 답변을 설명합니다."
-    )
-
-    question_icons = {
-        "개념": "💡",
-        "인과관계": "🔗",
-        "확장": "🔭",
-        "반대상황": "🔄",
-        "한국경제": "🇰🇷",
-        "투자시장": "📈"
-    }
-
-    for q in data["questions"]:
-
-        icon = question_icons.get(
-            q["type"],
-            "❓"
+        st.subheader(
+            "이 내용을 읽으면 이런 점이 궁금할 수 있어요."
         )
 
-        title = (
-            f"{icon} [{q['type']}] "
-            f"{q['question']}"
+        st.caption(
+            "질문을 클릭하면 EconQ가 왜 중요한 질문인지와 답변을 설명합니다."
         )
 
-        with st.expander(title):
+        question_icons = {
+            "개념": "💡",
+            "인과관계": "🔗",
+            "확장": "🔭",
+            "반대상황": "🔄",
+            "한국경제": "🇰🇷",
+            "투자시장": "📈"
+        }
 
-            st.markdown(
-                "🎯 **왜 이 질문이 중요할까요?**"
+        for q in data["questions"]:
+
+            icon = question_icons.get(
+                q["type"],
+                "❓"
             )
 
-            st.write(
-                q["why_important"]
+            title = (
+                f"{icon} [{q['type']}] "
+                f"{q['question']}"
             )
 
-            st.markdown(
-                "💬 **EconQ의 답변**"
-            )
+            with st.expander(title):
 
-            st.write(
-                q["answer"]
-            )
+                st.markdown(
+                    "🎯 **왜 이 질문이 중요할까요?**"
+                )
+
+                st.write(
+                    q["why_important"]
+                )
+
+                st.markdown(
+                    "💬 **EconQ의 답변**"
+                )
+
+                st.write(
+                    q["answer"]
+                )
 
 
     # -------------------------
-    # TAB 5
+    # TAB 5 : 한 단계 더
     # -------------------------
 
     with tab5:
@@ -596,8 +575,7 @@ with main_tab1:
             selected_issue = next(
                 issue
                 for issue in today_issues
-                if issue["title"]
-                == selected_title
+                if issue["title"] == selected_title
             )
 
             st.markdown(
