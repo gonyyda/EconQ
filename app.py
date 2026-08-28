@@ -41,7 +41,6 @@ today_issues = [
     {
         "title": "미국 물가 둔화와 연준 금리 전망",
         "category": "물가",
-        "source": "텔레그램에서 발견한 이슈",
         "content": """
 미국 물가 지표가 시장 예상보다 낮게 발표되면서
 연방준비제도의 금리 인하 가능성에 대한 기대가 확대됐다.
@@ -51,7 +50,6 @@ today_issues = [
     {
         "title": "국제유가 상승과 물가 부담",
         "category": "원자재",
-        "source": "텔레그램에서 발견한 이슈",
         "content": """
 국제유가가 상승하면서 글로벌 물가 압력이 다시 높아질 수 있다는 우려가 제기됐다.
 유가 상승은 기업의 비용과 소비자물가에 영향을 줄 수 있어
@@ -125,17 +123,45 @@ category는 반드시 다음 중 하나만 사용하세요.
 - 국제경제
 - 기타
 
+여러 카테고리를 결합하지 마세요.
+
+summary는 기사 핵심 내용을 3~5개의 짧은 문장으로 정리하세요.
+
+importance는 이 이슈가 경제·금융 측면에서 왜 중요한지
+2~4문장으로 설명하세요.
+
 facts는 기사에서 직접 확인되는 핵심 사실 5~7개만 작성하세요.
+기사에 없는 해석이나 전망은 넣지 마세요.
 
 ai_interpretations는 기사 내용을 바탕으로 한 핵심 해석 3~5개만 작성하세요.
 
+반드시 다음과 같은 불확실성 표현을 사용하세요.
+
+- "~할 수 있다"
+- "~가능성이 있다"
+- "~압력이 생길 수 있다"
+
+기사에서 확인된 사실처럼 단정하지 마세요.
+
 background는 기사 이해에 필요한 경제 개념 1~4개만 작성하세요.
 
-causal_chain은 단계별로 나누고 각 문자열 안에 "→"를 넣지 마세요.
+causal_chain은 경제적 인과관계를 단계별로 나누세요.
+각 문자열 안에 "→" 기호를 넣지 마세요.
+
+market_impacts는 실제 관련성이 높은 시장이나 경제주체만 분석하세요.
+
+direction은 가급적 아래 중 하나를 사용하세요.
+
+- 긍정적 영향 가능
+- 부정적 영향 가능
+- 상승 압력
+- 하락 압력
+- 변동성 확대 가능
+- 영향 불확실
 
 questions는 정확히 7개 생성하세요.
 
-question의 type은 다음 중 하나만 사용하세요.
+question의 type은 반드시 다음 중 하나만 사용하세요.
 
 - 개념
 - 인과관계
@@ -144,12 +170,24 @@ question의 type은 다음 중 하나만 사용하세요.
 - 한국경제
 - 투자시장
 
+질문은 서로 최대한 중복되지 않게 작성하세요.
+
+각 질문에는 다음을 모두 작성하세요.
+
+- type
+- question
+- why_important
+- answer
+
 further_thinking은 정확히 2개만 작성하세요.
 
 기사에 없는 사실을 임의로 만들지 마세요.
-사실과 AI의 해석을 반드시 구분하세요.
+기사에서 확인된 사실과 AI의 추가 해석을 반드시 구분하세요.
+숫자는 임의로 변경하지 마세요.
 전망은 단정하지 마세요.
 JSON 이외의 텍스트는 출력하지 마세요.
+trailing comma를 사용하지 마세요.
+반드시 파싱 가능한 올바른 JSON만 출력하세요.
 
 ### 입력 기사 또는 이슈
 
@@ -189,6 +227,10 @@ def show_analysis(data):
         ]
     )
 
+    # -------------------------
+    # TAB 1 : 핵심 정리
+    # -------------------------
+
     with tab1:
 
         st.subheader("핵심 요약")
@@ -209,26 +251,37 @@ def show_analysis(data):
         st.subheader("시장 영향")
 
         for impact in data["market_impacts"]:
+
             st.markdown(f"**{impact['market']}**")
             st.write(f"방향: {impact['direction']}")
             st.write(impact["reason"])
             st.write("")
+
+    # -------------------------
+    # TAB 2 : 사실 vs AI 해석
+    # -------------------------
 
     with tab2:
 
         col1, col2 = st.columns(2)
 
         with col1:
+
             st.subheader("📰 기사에서 확인된 사실")
 
             for fact in data["facts"]:
                 st.write(f"• {fact}")
 
         with col2:
+
             st.subheader("🤖 AI의 추가 해석")
 
             for item in data["ai_interpretations"]:
                 st.write(f"• {item}")
+
+    # -------------------------
+    # TAB 3 : 인과관계
+    # -------------------------
 
     with tab3:
 
@@ -237,14 +290,23 @@ def show_analysis(data):
         causal_chain = data["causal_chain"]
 
         for i, step in enumerate(causal_chain):
+
             st.markdown(f"### {i + 1}. {step}")
 
             if i < len(causal_chain) - 1:
                 st.markdown("↓")
 
+    # -------------------------
+    # TAB 4 : 궁금한 질문
+    # -------------------------
+
     with tab4:
 
         st.subheader("이 이슈를 이해하면 이런 점이 궁금할 수 있어요.")
+
+        st.caption(
+            "질문을 클릭하면 EconQ가 왜 중요한 질문인지와 답변을 설명합니다."
+        )
 
         for q in data["questions"]:
 
@@ -257,6 +319,10 @@ def show_analysis(data):
 
                 st.markdown("**답변**")
                 st.write(q["answer"])
+
+    # -------------------------
+    # TAB 5 : 한 단계 더
+    # -------------------------
 
     with tab5:
 
@@ -307,7 +373,7 @@ with main_tab1:
     st.subheader("오늘 꼭 알아둘 경제 이슈")
 
     st.caption(
-        "텔레그램 등에서 발견한 주요 경제 이슈를 EconQ가 분석합니다."
+        "주요 경제 이슈 중 하나를 선택하면 EconQ가 자동으로 분석합니다."
     )
 
     issue_titles = [
@@ -329,7 +395,7 @@ with main_tab1:
     st.markdown(
         f"""
 **카테고리:** {selected_issue['category']}
-
+"""
     )
 
     if st.button(
@@ -348,6 +414,13 @@ with main_tab1:
                 )
 
                 st.session_state["analysis"] = data
+
+            except json.JSONDecodeError:
+
+                st.error(
+                    "AI 응답을 JSON으로 변환하지 못했습니다. "
+                    "다시 한 번 분석해주세요."
+                )
 
             except Exception as e:
 
@@ -392,6 +465,13 @@ with main_tab2:
 
                     st.session_state["analysis"] = data
 
+                except json.JSONDecodeError:
+
+                    st.error(
+                        "AI 응답을 JSON으로 변환하지 못했습니다. "
+                        "다시 한 번 분석해주세요."
+                    )
+
                 except Exception as e:
 
                     st.error(
@@ -400,7 +480,7 @@ with main_tab2:
 
 
 # -----------------------------
-# 결과
+# 분석 결과
 # -----------------------------
 
 if "analysis" in st.session_state:
