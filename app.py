@@ -12,6 +12,8 @@ from hankyung_news import (
 
 from dashboard import INDICATORS, show_dashboard
 from style import apply_style, show_masthead
+from storage import add_scrap, init_storage, is_scrapped, remove_scrap, scrap_id
+from study import show_scrap_tab, show_study_tab
 
 # -----------------------------
 # 기본 설정
@@ -139,7 +141,21 @@ def analyze_news(news_text):
       "answer": ""
     }}
   ],
-  "further_thinking": []
+  "further_thinking": [],
+  "flashcards": [
+    {{
+      "category": "",
+      "front": "",
+      "back": ""
+    }}
+  ],
+  "ox_quiz": [
+    {{
+      "statement": "",
+      "answer": "",
+      "explanation": ""
+    }}
+  ]
 }}
 
 ## category
@@ -294,6 +310,27 @@ type은 반드시 아래 중 하나만 사용하세요.
 
 단순 내용 반복이 아니라 한 단계 더 생각해볼 수 있는 포인트를 작성하세요.
 
+## flashcards
+
+이 이슈를 계기로 외워둘 만한 지식을 암기용 카드로 5~7개 만드세요.
+
+- category는 반드시 "경제개념", "금융상품", "시사상식" 중 하나
+- front: 짧은 질문 또는 용어 (예: "기준금리란?")
+- back: 2~3문장의 정확하고 쉬운 설명
+- background에서 다룬 핵심 개념을 포함하세요.
+- 이 기사가 아니어도 통하는 일반 지식을 다루세요.
+  특정 날짜의 수치처럼 금방 바뀌는 내용은 넣지 마세요.
+
+## ox_quiz
+
+같은 지식을 확인하는 OX 문제를 5~6개 만드세요.
+
+- statement: 참 또는 거짓이 분명히 갈리는 한 문장
+- answer: "O" 또는 "X"
+- explanation: 왜 그런지 1~2문장으로 설명
+- O와 X가 비슷한 비율로 섞이게 하세요.
+- 의견이 갈리거나 전망에 해당하는 내용은 문제로 내지 마세요.
+
 ## 전체 원칙
 
 1. 입력된 자료에 없는 사실을 임의로 만들지 마세요.
@@ -333,6 +370,23 @@ def show_analysis(data):
     st.caption(
         f"카테고리: {data['category']}"
     )
+
+    if is_scrapped(data):
+
+        st.button(
+            "📌 스크랩됨 · 해제하기",
+            on_click=remove_scrap,
+            args=(scrap_id(data),)
+        )
+
+    else:
+
+        st.button(
+            "📌 스크랩하기",
+            type="primary",
+            on_click=add_scrap,
+            args=(data,)
+        )
 
     st.info(
         data["importance"]
@@ -537,6 +591,8 @@ def show_analysis(data):
 
 apply_style()
 
+init_storage()
+
 show_masthead()
 
 st.write(
@@ -551,10 +607,12 @@ st.write(
 # 메인 탭
 # -----------------------------
 
-main_tab1, main_tab2 = st.tabs(
+main_tab1, main_tab2, main_tab3, main_tab4 = st.tabs(
     [
         "🔥 오늘의 주요 이슈",
-        "📰 직접 기사 분석"
+        "📰 직접 기사 분석",
+        "📌 스크랩",
+        "🧠 학습"
     ]
 )
 
@@ -726,6 +784,19 @@ with main_tab2:
                     st.error(
                         f"오류가 발생했습니다: {e}"
                     )
+
+
+# -----------------------------
+# 스크랩 · 학습
+# -----------------------------
+
+with main_tab3:
+
+    show_scrap_tab()
+
+with main_tab4:
+
+    show_study_tab()
 
 
 # -----------------------------

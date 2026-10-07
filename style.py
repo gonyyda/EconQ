@@ -20,6 +20,17 @@ CSS = """
 
 [data-testid="stMetricValue"] { font-family: 'Noto Serif KR', serif; font-weight: 600; font-size: 1.8rem; }
 
+/* 브라우저 저장소 컴포넌트는 화면에 자리를 차지하지 않게 한다 */
+.st-key-econq_store_slot { position: absolute; height: 0; overflow: hidden; }
+
+/* 플래시카드 · OX 퀴즈 카드 */
+.eq-card { background: #FFFFFF; border: 1px solid #D8D2C4; border-top: 3px solid #0F4C81; border-radius: 4px; padding: 22px 26px 18px; min-height: 230px; display: flex; flex-direction: column; gap: 14px; }
+.eq-card-meta { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; font-size: 12.5px; letter-spacing: 0.04em; color: #5B6470; }
+.eq-card-front { font-family: 'Noto Serif KR', serif; font-size: clamp(20px, 3.2vw, 26px); font-weight: 700; line-height: 1.45; color: #16202B; }
+.eq-card-back { font-size: 16px; line-height: 1.75; color: #16202B; border-top: 1px dashed #D8D2C4; padding-top: 14px; }
+.eq-card-hint { font-size: 14px; color: #5B6470; }
+.eq-card-source { margin-top: auto; font-size: 12.5px; color: #5B6470; }
+
 /* 탭은 신문 섹션 메뉴처럼 */
 [data-baseweb="tab-list"] { gap: 4px; border-bottom: 1px solid #D8D2C4; }
 [data-baseweb="tab"] p { font-size: 15px; font-weight: 500; }

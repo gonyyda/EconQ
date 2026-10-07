@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"></head>
+<body>
+<script>
+// 브라우저 localStorage를 읽고 쓰는 최소한의 Streamlit 컴포넌트
+let answered = null;
+
+function send(type, data) {
+  window.parent.postMessage(
+    Object.assign({ isStreamlitMessage: true, type: type }, data),
+    "*"
+  );
+}
+
+window.addEventListener("message", function (event) {
+  if (!event.data || event.data.type !== "streamlit:render") return;
+
+  const args = event.data.args || {};
+
+  // 세션마다 다른 token이 오면 저장된 값을 새로 읽어서 파이썬으로 보낸다
+  // (연결이 끊겼다 다시 붙어 세션이 바뀌어도 옛 값을 돌려주지 않기 위함)
+  if (args.token && args.token !== answered) {
+    answered = args.token;
+    let stored = null;
+    try { stored = localStorage.getItem(args.name); } catch (err) {}
+    send("streamlit:setComponentValue", { value: { data: stored, token: args.token }, dataType: "json" });
+  }
+
+  // nonce가 바뀌었을 때만 새 값을 저장한다
+  try {
+    if (args.payload != null && args.nonce && sessionStorage.getItem("econq_nonce") !== args.nonce) {
+      localStorage.setItem(args.name, args.payload);
+      sessionStorage.setItem("econq_nonce", args.nonce);
+    }
+  } catch (err) {}
+
+  send("streamlit:setFrameHeight", { height: 0 });
+});
+
+send("streamlit:componentReady", { apiVersion: 1 });
+</script>
+</body>
+</html>
