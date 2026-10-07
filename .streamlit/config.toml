@@ -1,0 +1,13 @@
+[theme]
+base = "light"
+primaryColor = "#0F4C81"
+backgroundColor = "#F7F5F0"
+secondaryBackgroundColor = "#ECE8DF"
+textColor = "#16202B"
+linkColor = "#0F4C81"
+borderColor = "#D8D2C4"
+baseRadius = "small"
+showWidgetBorder = true
+font = "'Noto Sans KR':https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap, sans-serif"
+headingFont = "'Noto Serif KR':https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700&display=swap, serif"
+chartCategoricalColors = ["#0F4C81", "#C4622D", "#2E8B74", "#B8860B", "#7A4E8C", "#5B6B7A"]

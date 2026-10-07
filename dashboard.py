@@ -45,9 +45,9 @@ PERIODS = {
 }
 
 STAGE_COLORS = {
-    "원인": "#cde2fb",
-    "전달경로": "#f0efec",
-    "결과": "#fbd9c9"
+    "원인": "#D6E4F2",
+    "전달경로": "#ECE8DF",
+    "결과": "#F4DCCB"
 }
 
 DIRECTION_STYLES = {
@@ -204,7 +204,7 @@ def build_causal_dot(data):
     lines = [
         "digraph {",
         'bgcolor="transparent"; rankdir=TB; nodesep=0.3; ranksep=0.4;',
-        'node [shape=box, style="rounded,filled", color="#c3c2b7", '
+        'node [shape=box, style="rounded,filled", color="#B9B2A2", '
         'fontcolor="#0b0b0b", fontsize=12, margin="0.18,0.1"];',
         'edge [color="#898781", arrowsize=0.7];'
     ]
@@ -247,7 +247,7 @@ def show_causal_map(data):
 
     st.graphviz_chart(
         dot,
-        use_container_width=True
+        width="stretch"
     )
 
     st.caption(
@@ -281,7 +281,7 @@ def show_impact_board(data):
         )
     )
 
-    for impact in impacts:
+    for i, impact in enumerate(impacts):
 
         direction = impact.get("direction", "")
 
@@ -290,7 +290,7 @@ def show_impact_board(data):
             ("•", "gray")
         )
 
-        with st.container(border=True):
+        with st.container(border=True, key=f"card_board_{i}"):
 
             st.markdown(
                 f"**{impact.get('market', '')}** "
@@ -320,7 +320,7 @@ def show_indicator(name, days):
     except Exception:
         df = None
 
-    with st.container(border=True):
+    with st.container(border=True, key=f"card_indicator_{info['ticker']}"):
 
         if df is None or len(df) < 2:
 
@@ -348,7 +348,7 @@ def show_indicator(name, days):
             delta_color="off"
         )
 
-        color = "#3987e5" if is_dark_theme() else "#2a78d6"
+        color = "#3987e5" if is_dark_theme() else "#0F4C81"
 
         hover = alt.selection_point(
             nearest=True,
@@ -408,7 +408,7 @@ def show_indicator(name, days):
 
         st.altair_chart(
             (line + rule + point).properties(height=150),
-            use_container_width=True
+            width="stretch"
         )
 
         st.caption(

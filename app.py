@@ -11,6 +11,7 @@ from hankyung_news import (
 )
 
 from dashboard import INDICATORS, show_dashboard
+from style import apply_style, show_masthead
 
 # -----------------------------
 # 기본 설정
@@ -373,9 +374,9 @@ def show_analysis(data):
 
         st.subheader("시장 영향")
 
-        for impact in data["market_impacts"]:
+        for i, impact in enumerate(data["market_impacts"]):
 
-            with st.container(border=True):
+            with st.container(border=True, key=f"card_impact_{i}"):
 
                 st.markdown(
                     f"**{impact['market']}**"
@@ -437,7 +438,7 @@ def show_analysis(data):
 
         for i, step in enumerate(causal_chain):
 
-            with st.container(border=True):
+            with st.container(border=True, key=f"card_step_{i}"):
 
                 st.caption(
                     f"STEP {i + 1}"
@@ -519,11 +520,11 @@ def show_analysis(data):
             "한 단계 더 생각해보기"
         )
 
-        for item in data[
-            "further_thinking"
-        ]:
+        for i, item in enumerate(
+            data["further_thinking"]
+        ):
 
-            with st.container(border=True):
+            with st.container(border=True, key=f"card_think_{i}"):
 
                 st.write(
                     f"💡 {item}"
@@ -534,11 +535,9 @@ def show_analysis(data):
 # 메인 화면
 # -----------------------------
 
-st.title("📊 EconQ")
+apply_style()
 
-st.subheader(
-    "경제 뉴스를 읽고, 다음 질문까지 생각합니다."
-)
+show_masthead()
 
 st.write(
     """
@@ -546,8 +545,6 @@ st.write(
 직접 읽고 싶은 경제 기사를 입력해보세요.
 """
 )
-
-st.divider()
 
 
 # -----------------------------
