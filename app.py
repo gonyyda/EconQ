@@ -10,6 +10,8 @@ from hankyung_news import (
     select_top_economic_issues
 )
 
+from dashboard import INDICATORS, show_dashboard
+
 # -----------------------------
 # 기본 설정
 # -----------------------------
@@ -68,6 +70,11 @@ def get_today_issues():
 
 def analyze_news(news_text):
 
+    indicator_list = "\n".join(
+        f"- {name}"
+        for name in INDICATORS
+    )
+
     prompt = f"""
 당신은 경제·금융 시사 이슈를 분석하고 설명하는 AI입니다.
 
@@ -93,6 +100,29 @@ def analyze_news(news_text):
     }}
   ],
   "causal_chain": [],
+  "causal_graph": {{
+    "nodes": [
+      {{
+        "id": "",
+        "label": "",
+        "stage": ""
+      }}
+    ],
+    "edges": [
+      {{
+        "from": "",
+        "to": ""
+      }}
+    ]
+  }},
+  "key_figures": [
+    {{
+      "label": "",
+      "value": "",
+      "change": ""
+    }}
+  ],
+  "related_indicators": [],
   "market_impacts": [
     {{
       "market": "",
@@ -175,6 +205,34 @@ category는 반드시 아래 값 중 하나만 사용하세요.
 각 배열 항목에는 하나의 단계만 작성하세요.
 
 각 문자열 안에 "→" 기호를 넣지 마세요.
+
+## causal_graph
+
+causal_chain의 흐름을 그림으로 그릴 수 있도록 노드와 화살표로 표현하세요.
+
+- nodes는 5~8개, 각 label은 20자 이내의 짧은 명사형 표현
+- id는 "n1", "n2"처럼 작성
+- stage는 반드시 "원인", "전달경로", "결과" 중 하나
+- edges의 from, to에는 nodes의 id만 사용
+- 하나의 원인이 여러 결과로 갈라지면 화살표를 여러 개로 나누세요.
+
+## key_figures
+
+입력 자료에 숫자로 명시된 핵심 수치를 최대 4개 작성하세요.
+
+- label: 수치 이름 (예: "기준금리")
+- value: 단위를 포함한 값 (예: "3.0%")
+- change: 자료에 명시된 변화폭 (예: "+0.25%p"), 없으면 빈 문자열
+
+입력 자료에 없는 숫자는 절대 만들지 마세요. 수치가 없으면 빈 배열로 두세요.
+
+## related_indicators
+
+이 이슈와 관련성이 높은 시장 지표를 아래 목록에서 2~3개 고르세요.
+
+목록에 있는 이름을 그대로 사용하세요.
+
+{indicator_list}
 
 ## market_impacts
 
@@ -278,6 +336,8 @@ def show_analysis(data):
     st.info(
         data["importance"]
     )
+
+    show_dashboard(data)
 
     tab1, tab2, tab3, tab4, tab5 = st.tabs(
         [
