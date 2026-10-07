@@ -24,6 +24,25 @@ CSS = """
 .st-key-econq_store_slot { position: absolute; height: 0; overflow: hidden; }
 
 /* 플래시카드 · OX 퀴즈 카드 */
+/* 뒤집히는 플래시카드 */
+.eq-flip { display: block; position: relative; perspective: 1400px; cursor: pointer; margin: 6px 0 4px; }
+.eq-flip input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.eq-flip-inner { display: grid; transform-style: preserve-3d; transition: transform 0.55s cubic-bezier(.2,.7,.2,1); }
+.eq-flip input:checked ~ .eq-flip-inner { transform: rotateY(180deg); }
+.eq-flip input:focus-visible ~ .eq-flip-inner { outline: 3px solid #C4622D; outline-offset: 4px; border-radius: 14px; }
+.eq-flip-face { grid-area: 1 / 1; min-height: 300px; display: flex; flex-direction: column; gap: 16px; padding: 22px 28px 20px; border-radius: 14px; backface-visibility: hidden; -webkit-backface-visibility: hidden; box-shadow: 0 1px 2px rgba(22,32,43,.08), 0 14px 30px -14px rgba(22,32,43,.35); }
+.eq-flip-front { background: #0F4C81; color: #FFFFFF; }
+.eq-flip-back { background: #FFFFFF; color: #16202B; border: 1px solid #D8D2C4; transform: rotateY(180deg); }
+.eq-flip-meta { display: flex; justify-content: space-between; gap: 12px; font-size: 12.5px; letter-spacing: 0.05em; opacity: 0.8; }
+.eq-flip-term { flex: 1; display: flex; align-items: center; justify-content: center; text-align: center; font-family: 'Noto Serif KR', serif; font-size: clamp(24px, 4.4vw, 36px); font-weight: 700; line-height: 1.4; }
+.eq-flip-answer { flex: 1; display: flex; align-items: center; font-size: clamp(16px, 2.2vw, 18.5px); line-height: 1.8; }
+.eq-flip-hint { text-align: center; font-size: 12.5px; opacity: 0.7; }
+.eq-flip:hover .eq-flip-face { box-shadow: 0 1px 2px rgba(22,32,43,.08), 0 20px 36px -14px rgba(22,32,43,.45); }
+@media (prefers-reduced-motion: reduce) { .eq-flip-inner { transition: none; } }
+
+.eq-quiz-card { background: #FFFFFF; color: #16202B; border: 1px solid #D8D2C4; border-top: 4px solid #0F4C81; min-height: 240px; margin: 6px 0 4px; }
+.eq-quiz-card .eq-flip-term { font-size: clamp(20px, 3.4vw, 27px); }
+
 .eq-card { background: #FFFFFF; border: 1px solid #D8D2C4; border-top: 3px solid #0F4C81; border-radius: 4px; padding: 22px 26px 18px; min-height: 230px; display: flex; flex-direction: column; gap: 14px; }
 .eq-card-meta { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; font-size: 12.5px; letter-spacing: 0.04em; color: #5B6470; }
 .eq-card-front { font-family: 'Noto Serif KR', serif; font-size: clamp(20px, 3.2vw, 26px); font-weight: 700; line-height: 1.45; color: #16202B; }

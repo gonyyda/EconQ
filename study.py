@@ -216,7 +216,6 @@ def show_scrap_tab():
 def reset_flashcards():
 
     st.session_state["fc_idx"] = 0
-    st.session_state["fc_flipped"] = False
 
 
 def shuffle_flashcards():
@@ -229,19 +228,11 @@ def shuffle_flashcards():
 def move_flashcard(step):
 
     st.session_state["fc_idx"] = st.session_state.get("fc_idx", 0) + step
-    st.session_state["fc_flipped"] = False
-
-
-def flip_flashcard():
-
-    st.session_state["fc_flipped"] = not st.session_state.get("fc_flipped", False)
 
 
 def mark_flashcard(card_id, known):
 
     set_known(card_id, known)
-
-    st.session_state["fc_flipped"] = False
 
     # '못 외운 카드만' 볼 때 외운 카드는 목록에서 빠지므로 그대로 두면 다음 카드가 된다
     if not (known and st.session_state.get("fc_unknown")):
@@ -310,59 +301,34 @@ def show_flashcards(cards):
 
     card = deck[index]
 
-    flipped = st.session_state.get("fc_flipped", False)
-
     status = "외운 카드" if card["id"] in known else "학습 중"
 
-    if flipped:
-        answer = f'<div class="eq-card-back">{html.escape(card["back"])}</div>'
-    else:
-        answer = '<div class="eq-card-hint">답을 떠올린 뒤 카드를 뒤집어 보세요.</div>'
+    _, center, _ = st.columns([1, 4, 1])
 
-    st.html(
-        f"""
-<div class="eq-card">
-  <div class="eq-card-meta"><span>{html.escape(card["category"])} · {index + 1} / {len(deck)}</span><span>{status}</span></div>
-  <div class="eq-card-front">{html.escape(card["front"])}</div>
-  {answer}
-  <div class="eq-card-source">출처: {html.escape(card["source"])}</div>
-</div>
+    with center:
+
+        # 카드를 누르면 CSS만으로 뒤집힌다 (체크박스 상태 이용)
+        st.html(
+            f"""
+<label class="eq-flip">
+  <input type="checkbox" aria-label="카드 뒤집기">
+  <div class="eq-flip-inner">
+    <div class="eq-flip-face eq-flip-front">
+      <div class="eq-flip-meta"><span>{html.escape(card["category"])}</span><span>{index + 1} / {len(deck)} · {status}</span></div>
+      <div class="eq-flip-term">{html.escape(card["front"])}</div>
+      <div class="eq-flip-hint">카드를 눌러 답 확인하기</div>
+    </div>
+    <div class="eq-flip-face eq-flip-back">
+      <div class="eq-flip-meta"><span>{html.escape(card["front"])}</span><span>답</span></div>
+      <div class="eq-flip-answer">{html.escape(card["back"])}</div>
+      <div class="eq-flip-hint">출처: {html.escape(card["source"])}</div>
+    </div>
+  </div>
+</label>
 """
-    )
-
-    prev_col, flip_col, next_col = st.columns(3)
-
-    prev_col.button(
-        "← 이전",
-        on_click=move_flashcard,
-        args=(-1,),
-        width="stretch"
-    )
-
-    flip_col.button(
-        "앞면 보기" if flipped else "뒤집기",
-        type="primary",
-        on_click=flip_flashcard,
-        width="stretch"
-    )
-
-    next_col.button(
-        "다음 →",
-        on_click=move_flashcard,
-        args=(1,),
-        width="stretch"
-    )
-
-    if flipped:
-
-        known_col, again_col = st.columns(2)
-
-        known_col.button(
-            "✅ 외웠어요",
-            on_click=mark_flashcard,
-            args=(card["id"], True),
-            width="stretch"
         )
+
+        again_col, known_col = st.columns(2)
 
         again_col.button(
             "🔁 다시 볼게요",
@@ -371,11 +337,38 @@ def show_flashcards(cards):
             width="stretch"
         )
 
-    st.button(
-        "카드 섞기",
-        on_click=shuffle_flashcards,
-        type="tertiary"
-    )
+        known_col.button(
+            "✅ 외웠어요",
+            type="primary",
+            on_click=mark_flashcard,
+            args=(card["id"], True),
+            width="stretch"
+        )
+
+        prev_col, shuffle_col, next_col = st.columns(3)
+
+        prev_col.button(
+            "← 이전",
+            on_click=move_flashcard,
+            args=(-1,),
+            type="tertiary",
+            width="stretch"
+        )
+
+        shuffle_col.button(
+            "카드 섞기",
+            on_click=shuffle_flashcards,
+            type="tertiary",
+            width="stretch"
+        )
+
+        next_col.button(
+            "다음 →",
+            on_click=move_flashcard,
+            args=(1,),
+            type="tertiary",
+            width="stretch"
+        )
 
 
 # -----------------------------
@@ -483,52 +476,56 @@ def show_quiz(questions):
         text=f"문제 {index + 1} / {len(order)}"
     )
 
-    st.html(
-        f"""
-<div class="eq-card">
-  <div class="eq-card-meta"><span>OX 퀴즈</span><span>맞으면 O, 틀리면 X</span></div>
-  <div class="eq-card-front">{html.escape(question["statement"])}</div>
-  <div class="eq-card-source">출처: {html.escape(question["source"])}</div>
-</div>
-"""
-    )
+    _, center, _ = st.columns([1, 4, 1])
 
-    if choice is None:
+    with center:
 
-        o_col, x_col = st.columns(2)
-
-        o_col.button(
-            "O",
-            key="ox_o",
-            on_click=answer_quiz,
-            args=(question["id"], "O"),
-            width="stretch"
+        st.html(
+            f"""
+    <div class="eq-flip-face eq-quiz-card">
+      <div class="eq-flip-meta"><span>OX 퀴즈</span><span>문제 {index + 1} / {len(order)}</span></div>
+      <div class="eq-flip-term">{html.escape(question["statement"])}</div>
+      <div class="eq-flip-hint">맞으면 O, 틀리면 X · 출처: {html.escape(question["source"])}</div>
+    </div>
+    """
         )
 
-        x_col.button(
-            "X",
-            key="ox_x",
-            on_click=answer_quiz,
-            args=(question["id"], "X"),
-            width="stretch"
+        if choice is None:
+
+            o_col, x_col = st.columns(2)
+
+            o_col.button(
+                "O",
+                key="ox_o",
+                on_click=answer_quiz,
+                args=(question["id"], "O"),
+                width="stretch"
+            )
+
+            x_col.button(
+                "X",
+                key="ox_x",
+                on_click=answer_quiz,
+                args=(question["id"], "X"),
+                width="stretch"
+            )
+
+            return
+
+        if choice == question["answer"]:
+            st.success(f"정답입니다. 답은 {question['answer']}입니다.")
+        else:
+            st.error(f"틀렸습니다. 답은 {question['answer']}입니다.")
+
+        st.write(
+            question["explanation"]
         )
 
-        return
-
-    if choice == question["answer"]:
-        st.success(f"정답입니다. 답은 {question['answer']}입니다.")
-    else:
-        st.error(f"틀렸습니다. 답은 {question['answer']}입니다.")
-
-    st.write(
-        question["explanation"]
-    )
-
-    st.button(
-        "결과 보기" if index == len(order) - 1 else "다음 문제 →",
-        type="primary",
-        on_click=next_quiz
-    )
+        st.button(
+            "결과 보기" if index == len(order) - 1 else "다음 문제 →",
+            type="primary",
+            on_click=next_quiz
+        )
 
 
 # -----------------------------
